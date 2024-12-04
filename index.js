@@ -1,4 +1,35 @@
-const myLibrary = [];
+class Book {
+  constructor(name, author, pages, isRead = false) {
+    this.name = name;
+    this.author = author;
+    this.pages = pages;
+    this.isRead = isRead;
+  }
+}
+
+class Library {
+  constructor() {
+    this.books = [];
+  }
+
+  addBook(book) {
+    this.books.push(book);
+  }
+
+  removeBook(index) {
+    this.books.splice(index, 1);
+  }
+
+  toggleReadStatus(index) {
+    const book = this.books[index];
+    if (book) {
+      book.isRead = !book.isRead;
+    }
+  }
+}
+
+const myLibrary = new Library();
+
 const testBooks = [
   {
     name: "Harry Potter 1",
@@ -32,20 +63,9 @@ const testBooks = [
   },
 ];
 
-function Book(name, author, pages, isRead = false) {
-  this.name = name;
-  this.author = author;
-  this.pages = pages;
-  this.isRead = isRead;
-}
-
-function addBooksToLibrary(books) {
-  for (let book of books) {
-    myLibrary.push(new Book(book.name, book.author, book.pages, book.isRead));
-  }
-}
-
-addBooksToLibrary(testBooks);
+testBooks.forEach((bookData) => {
+  myLibrary.addBook(new Book(bookData.name, bookData.author, bookData.pages, bookData.isRead));
+});
 
 const table = document.querySelector("table tbody");
 
@@ -67,18 +87,19 @@ function addBookToTable(book, index) {
   removeButton.textContent = "Remove";
   removeButton.addEventListener("click", () => {
     newRow.remove();
-    myLibrary.splice(index, 1);
+    myLibrary.removeBook(index);
+    refreshTable();
   });
 
-  const changeStatus = document.createElement("button");
-  changeStatus.textContent = "Change status";
-  changeStatus.addEventListener("click", () => {
-    book.isRead = !book.isRead;
+  const changeStatusButton = document.createElement("button");
+  changeStatusButton.textContent = "Change status";
+  changeStatusButton.addEventListener("click", () => {
+    myLibrary.toggleReadStatus(index);
     newCellRead.textContent = book.isRead ? "Yes" : "No";
   });
 
   newCellActions.appendChild(removeButton);
-  newCellActions.appendChild(changeStatus);
+  newCellActions.appendChild(changeStatusButton);
 
   newRow.appendChild(newCellName);
   newRow.appendChild(newCellAuthor);
@@ -89,7 +110,12 @@ function addBookToTable(book, index) {
   table.appendChild(newRow);
 }
 
-myLibrary.forEach((book, index) => addBookToTable(book, index));
+function refreshTable() {
+  table.innerHTML = "";
+  myLibrary.books.forEach((book, index) => addBookToTable(book, index));
+}
+
+refreshTable();
 
 const button = document.querySelector("#addBook");
 const dialog = document.querySelector("#dialogForm");
@@ -109,13 +135,17 @@ dialogAddBook.addEventListener("click", (event) => {
   const isRead = document.querySelector("#isRead").checked;
 
   const newBook = new Book(name, author, pages, isRead);
-  myLibrary.push(newBook);
+  myLibrary.addBook(newBook);
 
-  addBookToTable(newBook, myLibrary.length - 1);
+  refreshTable();
 
   document.querySelector("#bookName").value = "";
   document.querySelector("#bookAuthor").value = "";
   document.querySelector("#bookPages").value = "";
   document.querySelector("#isRead").checked = false;
+  dialog.close();
+});
+
+dialogClose.addEventListener("click", () => {
   dialog.close();
 });
